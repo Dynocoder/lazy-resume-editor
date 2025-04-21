@@ -167,7 +167,7 @@ function App() {
             disabled={apiKey}
             className="compile-button"
           >
-            {isCompiling ? 'Compiling...' : 'Compile & Preview'}
+            {isCompiling ? 'Compiling...' : 'Manage API Key'}
           </button>
           <button
             onClick={compilePdf}
