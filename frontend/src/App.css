@@ -53,6 +53,27 @@ header h1 {
   cursor: not-allowed;
 }
 
+.api-key-button {
+  background-color: #4287f5;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-right: 10px;
+}
+
+.api-key-button:hover {
+  background-color: #3a75dd;
+  transition: background-color 0.2s;
+}
+
+.api-key-button:disabled {
+  background-color: #2d2d2d;
+  cursor: not-allowed;
+}
+
 main {
   display: flex;
   flex: 1;
