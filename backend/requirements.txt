@@ -1,3 +1,7 @@
-flask
-flask-cors
-gunicorn
+flask==2.0.3
+flask-cors==3.0.10
+openai==0.28.0
+weasyprint==52.5
+pydyf==0.1.0
+werkzeug<2.1.0
+PyPDF2

@@ -1,86 +1,70 @@
-# LAZY RESUME EDITOR
+# Lazy Resume Editor
 
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Version](https://img.shields.io/badge/version-1.0.0-green)
+A web-based resume editor with live preview. Edit your resume using HTML and CSS, and see the changes in real-time.
 
-A modern web application that helps you create, edit, and customize professional resumes using LaTeX and ChatGPT integration, all in one place.
+## Features
 
-## 🚀 Features
+- Real-time HTML/CSS editing with Monaco Editor
+- Live preview pane
+- File system with support for HTML, CSS, and JS files
+- Simple and clean interface
+- Export to PDF functionality
 
-- **LaTeX Resume Editing**: Edit LaTeX documents with real-time syntax highlighting
-- **Instant PDF Preview**: See changes instantly with built-in PDF preview
-- **AI Integration**: Utilize ChatGPT (via OpenAI API) to help improve your resume content
-- **File Management**: Create, edit, rename, and organize your resume components
-- **Modern UI**: Clean, intuitive interface built with React and Tailwind CSS
+## Getting Started
 
-## 🛠️ Tech Stack
-
-**Frontend:**
-- React with Vite
-- Monaco Editor for code editing
-- PDF.js for PDF preview
-- Tailwind CSS for styling
-
-**Backend:**
-- Flask server with Python
-- LaTeX compilation engine
-- OpenAI API integration
-- Docker containerization
-
-## 📋 Prerequisites
+### Prerequisites
 
 - Docker and Docker Compose
-- Node.js and npm (for development)
-- LaTeX installation (automated in Docker)
-- OpenAI API key (for AI features)
 
-## 🔧 Installation (Docker yet needs to be configured.)
+### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Dynocoder/lazy-resume-editor.git
-   cd lazy-resume-editor
-   ```
+1. Clone the repository
 
-2. Start the application using Docker Compose: (Comming SOon)
-   ```bash
-   docker-compose up -d 
-   ```
-
-3. Open your browser and navigate to:
-   ```
-   http://localhost
-   ```
-
-## 🔍 Usage
-
-1. **Edit your resume**: Use the LaTeX editor to write or modify your resume
-2. **Compile and preview**: Click the "Compile & Preview" button to see changes
-3. **AI assistance**: Add your OpenAI API key to get AI-powered suggestions for your resume
-4. **Organize files**: Use the file explorer to manage multiple resume components
-
-## 🧩 Project Structure
-
+```bash
+git clone https://github.com/yourusername/lazy-resume-editor.git
+cd lazy-resume-editor
 ```
-lazy-resume-editor/
-├── frontend/              # React frontend application
-│   ├── src/               # Source code
-│   ├── public/            # Public assets
-│   └── Dockerfile         # Frontend container configuration
-├── backend/               # Flask backend server
-│   ├── app.py             # Main application server
-│   ├── requirements.txt   # Python dependencies
-│   └── Dockerfile         # Backend container configuration
-└── docker-compose.yml     # Docker Compose configuration
+
+2. Start the application with Docker Compose
+
+```bash
+docker-compose up
 ```
+
+3. Open your browser and go to [http://localhost:8123](http://localhost:8123)
+
+## Usage
+
+1. Edit the HTML and CSS files in the editor
+2. See the changes immediately reflected in the preview pane
+3. Add new files if needed
+4. Export to PDF when you're satisfied with your resume
+
+## Development Setup
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Dynocoder/lazy-resume-editor/issues).
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgements
 

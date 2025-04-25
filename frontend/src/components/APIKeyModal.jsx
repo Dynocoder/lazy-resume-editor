@@ -1,22 +1,17 @@
 import { useEffect, useState } from "react";
 
-export default function APIKeyModal({ isOpen, onClose }) {
-  const [key, setKey] = useState("");
-
-  useEffect(() => {
-    const key = localStorage.getItem('openai_api_key');
-
-    if (key !== null && key.length > 0) {
-      setKey(key);
-    }
-  })
+export default function APIKeyModal({ isOpen, onClose, onSave, initialValue = "" }) {
+  const [key, setKey] = useState(initialValue);
+  const [model, setModel] = useState(localStorage.getItem('openai_model') || "gpt-3.5-turbo-0125");
+  
+  useEffect(() => { if (initialValue) setKey(initialValue); }, [initialValue]);
 
   if (!isOpen) return null;
 
-  const onSave = (key) => {
-    localStorage.setItem('openai_api_key', key);
-  }
-
+  const handleSave = () => {
+    localStorage.setItem('openai_model', model);
+    onSave(key, model);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -34,7 +29,7 @@ export default function APIKeyModal({ isOpen, onClose }) {
         </button>
 
         {/* Title */}
-        <h2 className="text-2xl font-semibold text-gray-100 text-center">Enter OpenAI API Key</h2>
+        <h2 className="text-2xl font-semibold text-gray-100 text-center">OpenAI Settings</h2>
 
         {/* Input Field */}
         <div className="flex flex-col gap-2">
@@ -50,6 +45,24 @@ export default function APIKeyModal({ isOpen, onClose }) {
           />
         </div>
 
+        {/* Model Selection */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="model-select" className="text-sm font-medium text-gray-300">Model</label>
+          <select
+            id="model-select"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-700 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-gray-800 text-gray-100"
+          >
+            <option value="gpt-3.5-turbo-0125">GPT-3.5 Turbo (0125)</option>
+            <option value="gpt-4o-mini">GPT-4o Mini</option>
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+          </select>
+          <p className="text-xs text-gray-400 mt-1">Select a model your API key has access to</p>
+        </div>
+
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-2">
           <button
@@ -60,10 +73,7 @@ export default function APIKeyModal({ isOpen, onClose }) {
             Cancel
           </button>
           <button
-            onClick={() => {
-              onSave(key);
-              onClose();
-            }}
+            onClick={handleSave}
             className="px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-base"
             type="button"
           >

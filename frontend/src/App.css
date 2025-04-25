@@ -7,100 +7,118 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f5f5f5;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
+/* App layout */
 .app {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
+  overflow: hidden;
   background-color: #1e1e1e;
-  color: #fff;
+  color: #e0e0e0;
 }
 
 header {
-  padding: 1rem;
-  background-color: #2d2d2d;
-  border-bottom: 1px solid #444;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #333;
+  border-bottom: 1px solid #444;
+  width: 100%;
 }
 
 header h1 {
   margin: 0;
   font-size: 1.5rem;
+  margin-right: auto;
 }
 
-.compile-button {
-  background-color: #42b883;
+header button {
+  margin-left: 10px;
+  padding: 8px 16px;
+  background-color: #4a4a4a;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
-}
-
-.compile-button:hover {
-  background-color: #3aa876;
-}
-
-.compile-button:disabled {
-  background-color: #2d2d2d;
-  cursor: not-allowed;
-}
-
-.api-key-button {
-  background-color: #4287f5;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  margin-right: 10px;
-}
-
-.api-key-button:hover {
-  background-color: #3a75dd;
   transition: background-color 0.2s;
 }
 
-.api-key-button:disabled {
-  background-color: #2d2d2d;
+header button:hover {
+  background-color: #555;
+}
+
+header button:disabled {
+  background-color: #333;
   cursor: not-allowed;
 }
+
+.api-key-button.api-key-set {
+  background-color: #4CAF50 !important;
+}
+
+.api-key-button.api-key-set:hover {
+  background-color: #3e8e41 !important;
+}
+
+.render-button { background-color: #4CAF50 !important; }
+.render-button:hover { background-color: #3e8e41 !important; }
+
+.export-button { background-color: #2196F3 !important; }
+.export-button:hover { background-color: #0b7dda !important; }
+
+.test-button { background-color: #9c27b0 !important; }
+.test-button:hover { background-color: #7b1fa2 !important; }
 
 main {
   display: flex;
   flex: 1;
+  width: 100%;
   overflow: hidden;
 }
 
 .editor-pane {
   flex: 1;
-  overflow: hidden;
+  min-width: 0;
+  overflow: auto;
+  border-right: 1px solid #444;
 }
 
 .preview-pane {
   flex: 1;
-  overflow: hidden;
+  min-width: 0;
+  overflow: auto;
   background-color: #fff;
   position: relative;
 }
 
-.pdf-document {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.preview-pane iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  display: block;
 }
 
-.pdf-page {
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
 }
 
 .error-message {
@@ -108,25 +126,195 @@ main {
   top: 0;
   left: 0;
   right: 0;
-  background-color: #ff4444;
-  color: white;
   padding: 1rem;
-  z-index: 1;
-}
-
-.loading {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: #f44336;
   color: white;
-  padding: 1rem 2rem;
-  border-radius: 4px;
+  font-size: 1rem;
 }
 
-iframe {
+/* Modal styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #2d2d2d;
+  border-radius: 5px;
+  padding: 20px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.close-button {
+  background: none;
   border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.close-button:hover {
+  color: white;
+}
+
+.modal-body {
+  margin-bottom: 20px;
+}
+
+.modal-body input {
   width: 100%;
-  height: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #1e1e1e;
+  color: white;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-footer button {
+  padding: 8px 16px;
+  margin-left: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-footer button.cancel {
+  background-color: #616161;
+  color: white;
+}
+
+.modal-footer button.save {
+  background-color: #2196F3;
+  color: white;
+}
+
+/* Responsive layout adjustments */
+@media screen and (max-width: 768px) {
+  main {
+    flex-direction: column;
+  }
+  
+  .editor-pane, .preview-pane {
+    flex: none;
+    height: 50vh;
+    width: 100%;
+  }
+  
+  .editor-pane {
+    border-right: none;
+    border-bottom: 1px solid #444;
+  }
+}
+
+/* AI Edit Tooltip */
+.ai-edit-instructions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 900;
+}
+
+.ai-edit-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.ai-edit-tooltip-icon {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  font-size: 18px;
+  text-align: center;
+  line-height: 30px;
+}
+
+.ai-edit-tooltip-text {
+  visibility: hidden;
+  width: 250px;
+  background-color: rgba(47, 53, 66, 0.95);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 12px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  right: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+.ai-edit-tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 15px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: rgba(47, 53, 66, 0.95) transparent transparent transparent;
+}
+
+.ai-edit-tooltip:hover .ai-edit-tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Find your existing toolbar-button styles and ensure they're applied to the new button */
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #2c2c2c;
+  border: none;
+  color: #e0e0e0;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.toolbar-button:hover {
+  background-color: #3e3e3e;
+}
+
+.toolbar-button svg {
+  width: 16px;
+  height: 16px;
 }
