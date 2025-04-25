@@ -4,3 +4,4 @@ openai==0.28.0
 weasyprint==52.5
 pydyf==0.1.0
 werkzeug<2.1.0
+PyPDF2
