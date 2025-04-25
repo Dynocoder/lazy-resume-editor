@@ -221,13 +221,12 @@ def ai_edit():
         if not target_file:
             return jsonify({'error': f'Target file {target_path} not found'}), 404
         
-        # Import OpenAI (only when needed)
-        try:
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key)
-        except ImportError as e:
-            print(f"OpenAI import error: {str(e)}")
-            return jsonify({'error': 'OpenAI package not installed. Run: pip install openai'}), 503
+        # Configure OpenAI API key and clear proxy settings
+        import openai
+        openai.api_key = api_key
+        # Remove any HTTP proxy env vars to avoid client init errors
+        for var in ('HTTP_PROXY','http_proxy','HTTPS_PROXY','https_proxy'):
+            os.environ.pop(var, None)
         
         # Handle special case selectors
         if ':contains(' in element_selector:
@@ -282,7 +281,7 @@ def ai_edit():
             for model in models_to_try:
                 try:
                     print(f"Trying model: {model}")
-                    response = client.chat.completions.create(
+                    response = openai.ChatCompletion.create(
                         model=model,
                         messages=[
                             {"role": "system", "content": "You are an expert HTML editor that helps modify HTML documents precisely."},
