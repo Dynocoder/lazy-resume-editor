@@ -27,33 +27,35 @@ def create_file_structure(temp_dir, files):
 
 @app.route('/render', methods=['POST'])
 def render_html():
+    """Render HTML with associated CSS files"""
     if not request.json or 'files' not in request.json:
         return jsonify({'error': 'No files provided'}), 400
     
     files = request.json['files']
     main_file = request.json.get('mainFile', 'index.html')
-    
-    # Create a unique temporary directory
     temp_dir = tempfile.mkdtemp()
     
     try:
-        # Create the file structure
+        # Create file structure and get HTML content
         create_file_structure(temp_dir, files)
-        
-        # Read the main HTML file
         main_file_path = os.path.join(temp_dir, main_file)
         
         if not os.path.exists(main_file_path):
             return jsonify({'error': f'Main file {main_file} not found'}), 400
-            
+        
         with open(main_file_path, 'r') as f:
             html_content = f.read()
-            
-        return jsonify({'html': html_content})
+        
+        # Collect all CSS files
+        css_files = {f['path']: f['content'] for f in files if f['path'].endswith('.css')}
+        
+        return jsonify({
+            'html': html_content,
+            'css_files': css_files
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
-        # Clean up temporary files
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 @app.route('/weasyprint-status', methods=['GET'])
@@ -67,72 +69,56 @@ def weasyprint_status():
 @app.route('/export-pdf', methods=['POST'])
 def export_pdf():
     """Export HTML to PDF using WeasyPrint"""
-    # Check if WeasyPrint is available
     if not WEASYPRINT_AVAILABLE:
         return jsonify({
-            'error': 'WeasyPrint is not installed or not working properly',
-            'details': 'Please install with: pip install WeasyPrint==52.5 pydyf==0.1.0'
-        }), 503  # Service Unavailable
+            'error': 'WeasyPrint is not installed',
+            'details': 'Install with: pip install WeasyPrint==52.5 pydyf==0.1.0'
+        }), 503
     
     if not request.json or 'files' not in request.json:
         return jsonify({'error': 'No files provided'}), 400
     
     files = request.json['files']
     main_file = request.json.get('mainFile', 'index.html')
-    
-    # Create a unique temporary directory
     temp_dir = tempfile.mkdtemp()
     
     try:
-        # Create the file structure
+        # Create file structure
         create_file_structure(temp_dir, files)
-        
-        # Get the main HTML file path
         main_file_path = os.path.join(temp_dir, main_file)
         
         if not os.path.exists(main_file_path):
             return jsonify({'error': f'Main file {main_file} not found'}), 400
         
-        # Get the directory of the main HTML file to set the base URL
+        # Set base URL for resources
         base_url = f"file://{os.path.dirname(main_file_path)}/"
         
+        # Generate PDF
+        html = HTML(filename=main_file_path, base_url=base_url)
+        pdf_buffer = BytesIO()
+        
         try:
-            # Create the PDF with WeasyPrint
-            html = HTML(filename=main_file_path, base_url=base_url)
-            
-            # Generate PDF in memory
-            pdf_buffer = BytesIO()
-            html.write_pdf(pdf_buffer)
-            pdf_buffer.seek(0)
-            
-            # Return the PDF as a file
-            return send_file(
-                pdf_buffer,
-                mimetype='application/pdf',
-                as_attachment=True,
-                download_name='resume.pdf'
-            )
+            html.write_pdf(pdf_buffer, stylesheets=[CSS(string='@page { size: letter; margin: 0; }')])
         except Exception as e:
-            # Specific WeasyPrint error handling
-            error_details = str(e)
-            if "cairo" in error_details.lower():
-                error_details += ". Missing Cairo library. Install system dependencies."
-            elif "pango" in error_details.lower():
-                error_details += ". Missing Pango library. Install system dependencies."
-            elif "takes 1 positional argument but" in error_details:
-                error_details = "There's a version conflict with WeasyPrint dependencies. Run ./fix_weasyprint.sh to fix it."
-            
-            return jsonify({
-                'error': 'WeasyPrint PDF generation failed',
-                'details': error_details
-            }), 500
+            print(f"Error with default parameters: {str(e)}")
+            pdf_buffer = BytesIO()
+            html.write_pdf(pdf_buffer, stylesheets=[CSS(string='@page { size: letter; margin: 0; }')])
+        
+        pdf_buffer.seek(0)
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='resume.pdf'
+        )
     except Exception as e:
+        error_details = str(e)
+        print(f"PDF generation error: {error_details}")
         return jsonify({
-            'error': 'Failed to generate PDF',
-            'details': str(e)
+            'error': 'PDF generation failed',
+            'details': error_details
         }), 500
     finally:
-        # Clean up temporary files
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 @app.route('/test-weasyprint', methods=['GET'])

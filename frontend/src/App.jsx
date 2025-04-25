@@ -258,52 +258,41 @@ body {
         mainFile: 'index.html'
       });
 
-      // Inject the selection script into the HTML content
+      // Selection script for AI editing functionality
       const selectionScript = `
       <script>
         document.addEventListener('mouseup', function(e) {
           const selection = window.getSelection();
           if (!selection.isCollapsed) {
-            let element;
+            // Get selected element
+            const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+            if (!range) return;
             
-            // Try to get the selected element
-            if (selection.rangeCount > 0) {
-              const range = selection.getRangeAt(0);
-              
-              // First try to get the common ancestor
-              element = range.commonAncestorContainer;
-              
-              // If it's a text node, get its parent
-              if (element.nodeType === 3) { // Text node
-                element = element.parentElement;
-              }
-              
-              // If we still don't have an element or it's the body, try to get a more specific element
-              if (!element || element.tagName === 'BODY') {
-                // Try to get the first element in the selection
-                const selectedNode = range.startContainer;
-                if (selectedNode.nodeType === 3) { // Text node
-                  element = selectedNode.parentElement;
-                } else {
-                  element = selectedNode;
-                }
-              }
+            // Get element, handling text nodes by getting parent
+            let element = range.commonAncestorContainer;
+            if (element.nodeType === 3) element = element.parentElement;
+            
+            // If element is body or invalid, try to get a more specific element
+            if (!element || element.tagName === 'BODY') {
+              const selectedNode = range.startContainer;
+              element = selectedNode.nodeType === 3 ? selectedNode.parentElement : selectedNode;
             }
             
-            // If we still don't have a valid element, exit
             if (!element || !element.tagName) return;
             
-            // Get position relative to the iframe
+            // Send element info to parent
             const rect = element.getBoundingClientRect();
-            
-            // Send message to parent window
             window.parent.postMessage({
               type: 'elementSelected',
               element: {
                 tagName: element.tagName,
                 id: element.id || '',
                 className: element.className || '',
-                textContent: element.textContent ? element.textContent.substring(0, 50) + (element.textContent.length > 50 ? '...' : '') : '',
+                textContent: element.textContent ? 
+                  (element.textContent.length > 50 ? 
+                    element.textContent.substring(0, 50) + '...' : 
+                    element.textContent) : 
+                  '',
                 html: element.outerHTML || ''
               },
               position: {
@@ -313,13 +302,24 @@ body {
             }, '*');
           }
         });
-      </script>
-      `;
+      </script>`;
       
-      // Add the script to the HTML content
-      const htmlWithScript = response.data.html.replace('</body>', `${selectionScript}</body>`);
-      setHtmlContent(htmlWithScript);
+      // Process CSS files
+      const cssFiles = response.data.css_files || {};
+      const inlineStyles = Object.entries(cssFiles)
+        .map(([path, content]) => `<style data-source="${path}">${content}</style>`)
+        .join('');
+      
+      // Add CSS and script to HTML
+      let html = response.data.html;
+      if (inlineStyles) {
+        html = html.replace('</head>', `${inlineStyles}</head>`);
+      }
+      html = html.replace('</body>', `${selectionScript}</body>`);
+      
+      setHtmlContent(html);
     } catch (err) {
+      console.error('Render error:', err);
       setError('Failed to render HTML. Check your code for errors.');
     } finally {
       setIsRendering(false);
@@ -331,31 +331,25 @@ body {
       setIsRendering(true);
       setError(null);
       
-      // Check if WeasyPrint is available
+      // Check WeasyPrint availability
       const statusResponse = await axios.get(`${BACKEND_URL}/weasyprint-status`);
-      
       if (!statusResponse.data.available) {
         setError('PDF export not available: WeasyPrint is not properly installed on the server.');
-        alert('WeasyPrint is not installed on the server. Please install it to enable PDF export functionality.');
         return;
       }
       
-      // Export PDF
-      const response = await axios.post(`${BACKEND_URL}/export-pdf`, {
-        files: files,
-        mainFile: 'index.html'
-      }, { 
-        responseType: 'blob',
-        validateStatus: function(status) {
-          return status < 600; // Accept all status codes
-        }
-      });
+      // Generate PDF
+      const response = await axios.post(
+        `${BACKEND_URL}/export-pdf`, 
+        { files, mainFile: 'index.html' }, 
+        { responseType: 'blob', validateStatus: status => status < 600 }
+      );
       
-      // If we got an error response (not a PDF)
+      // Handle non-PDF responses (errors)
       if (response.headers['content-type'] === 'application/json') {
-        const errorText = await response.data.text();
-        const errorJson = JSON.parse(errorText);
-        setError(`PDF export failed: ${errorJson.error || errorJson.details || 'Server error'}`);
+        const text = await response.data.text();
+        const errorJson = JSON.parse(text);
+        setError(`PDF export failed: ${errorJson.error || 'Server error'}`);
         return;
       }
       
@@ -364,16 +358,12 @@ body {
         return;
       }
       
-      // Create a blob from the PDF data
+      // Download the PDF
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      
-      // Create a link to download the PDF
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'resume.pdf');
-      
-      // Download the PDF
       document.body.appendChild(link);
       link.click();
       
@@ -382,29 +372,9 @@ body {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(link);
       }, 100);
-      
     } catch (err) {
-      if (err.response && err.response.data) {
-        if (err.response.data instanceof Blob) {
-          try {
-            const text = await err.response.data.text();
-            try {
-              const errorData = JSON.parse(text);
-              setError(`PDF export failed: ${errorData.error || errorData.details || 'Server error'}`);
-            } catch (e) {
-              setError(`PDF export failed: ${text.substring(0, 100)}`);
-            }
-          } catch (e) {
-            setError(`PDF export failed: Response could not be parsed`);
-          }
-        } else {
-          setError(`PDF export failed: ${err.response.data.error || err.response.data.details || 'Server error'}`);
-        }
-      } else if (err.request) {
-        setError('PDF export failed: No response from server. Check if the backend is running.');
-      } else {
-        setError(`PDF export failed: ${err.message || 'Unknown error'}`);
-      }
+      console.error('PDF export error:', err);
+      setError(`PDF export failed: ${err.message || 'Unknown error'}`);
     } finally {
       setIsRendering(false);
     }
