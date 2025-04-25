@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import FileExplorer from './components/FileExplorer';
+import AIEdit from './components/AIEdit';
 import './App.css';
 import APIKeyModal from './components/APIKeyModal';
 
@@ -149,11 +150,18 @@ function App() {
   const [currentFile, setCurrentFile] = useState(initialFiles[0]);
   const [htmlContent, setHtmlContent] = useState('');
   const [isRendering, setIsRendering] = useState(false);
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('openai_api_key') || "");
+  const [aiModel, setAiModel] = useState(() => localStorage.getItem('openai_model') || "gpt-3.5-turbo-0125");
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState(null);
   const [fileToRename, setFileToRename] = useState(null);
   const renderTimeoutRef = useRef(null);
+  const iframeRef = useRef(null);
+  
+  // AI Edit state
+  const [selectedElement, setSelectedElement] = useState(null);
+  const [aiEditPosition, setAiEditPosition] = useState({ x: 0, y: 0 });
+  const [showAiEdit, setShowAiEdit] = useState(false);
 
   const handleFileSelect = (file) => {
     setCurrentFile(file);
@@ -250,7 +258,67 @@ body {
         mainFile: 'index.html'
       });
 
-      setHtmlContent(response.data.html);
+      // Inject the selection script into the HTML content
+      const selectionScript = `
+      <script>
+        document.addEventListener('mouseup', function(e) {
+          const selection = window.getSelection();
+          if (!selection.isCollapsed) {
+            let element;
+            
+            // Try to get the selected element
+            if (selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              
+              // First try to get the common ancestor
+              element = range.commonAncestorContainer;
+              
+              // If it's a text node, get its parent
+              if (element.nodeType === 3) { // Text node
+                element = element.parentElement;
+              }
+              
+              // If we still don't have an element or it's the body, try to get a more specific element
+              if (!element || element.tagName === 'BODY') {
+                // Try to get the first element in the selection
+                const selectedNode = range.startContainer;
+                if (selectedNode.nodeType === 3) { // Text node
+                  element = selectedNode.parentElement;
+                } else {
+                  element = selectedNode;
+                }
+              }
+            }
+            
+            // If we still don't have a valid element, exit
+            if (!element || !element.tagName) return;
+            
+            // Get position relative to the iframe
+            const rect = element.getBoundingClientRect();
+            
+            // Send message to parent window
+            window.parent.postMessage({
+              type: 'elementSelected',
+              element: {
+                tagName: element.tagName,
+                id: element.id || '',
+                className: element.className || '',
+                textContent: element.textContent ? element.textContent.substring(0, 50) + (element.textContent.length > 50 ? '...' : '') : '',
+                html: element.outerHTML || ''
+              },
+              position: {
+                x: rect.left + window.scrollX,
+                y: rect.top + window.scrollY
+              }
+            }, '*');
+          }
+        });
+      </script>
+      `;
+      
+      // Add the script to the HTML content
+      const htmlWithScript = response.data.html.replace('</body>', `${selectionScript}</body>`);
+      setHtmlContent(htmlWithScript);
     } catch (err) {
       setError('Failed to render HTML. Check your code for errors.');
     } finally {
@@ -386,6 +454,47 @@ body {
     renderHtml();
   }, [currentFile.path]);
 
+  // Handle messages from the iframe
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'elementSelected') {
+        // Store the selected element data
+        setSelectedElement(event.data.element);
+        
+        // Calculate position for the AI Edit box
+        // Get the iframe position
+        const iframe = iframeRef.current;
+        if (iframe) {
+          const iframeRect = iframe.getBoundingClientRect();
+          
+          setAiEditPosition({
+            x: iframeRect.left + event.data.position.x,
+            y: iframeRect.top + event.data.position.y
+          });
+          
+          setShowAiEdit(true);
+        }
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+  
+  // Handle AI edits
+  const handleAiEditUpdate = (updatedFiles) => {
+    setFiles(updatedFiles);
+    
+    // Find and update the current file if it was changed
+    const updatedCurrentFile = updatedFiles.find(f => f.path === currentFile.path);
+    if (updatedCurrentFile) {
+      setCurrentFile(updatedCurrentFile);
+    }
+    
+    // Re-render the preview
+    renderHtml();
+  };
+
   // Determine the language for the Monaco editor based on file extension
   const getEditorLanguage = () => {
     if (currentFile.path.endsWith('.html')) return 'html';
@@ -401,10 +510,9 @@ body {
           <h1>HTML Resume Editor</h1>
           <button
             onClick={storeAPIKey}
-            disabled={apiKey}
-            className="api-key-button"
+            className={`api-key-button ${apiKey ? 'api-key-set' : ''}`}
           >
-            Manage API Key
+            {apiKey ? "✓ API Key Set" : "Add API Key"}
           </button>
           <button
             onClick={renderHtml}
@@ -457,16 +565,40 @@ body {
             {error && <div className="error-message">{error}</div>}
 
             {htmlContent && (
-              <iframe 
-                srcDoc={htmlContent}
-                title="Resume Preview"
-                width="100%"
-                height="100%"
-                sandbox="allow-same-origin"
-              />
+              <>
+                <div className="ai-edit-instructions">
+                  <div className="ai-edit-tooltip">
+                    <span className="ai-edit-tooltip-icon">ℹ️</span>
+                    <div className="ai-edit-tooltip-text">
+                      Select any text or element to access AI edit. Type your instruction, like "make it bold" or "change text color to blue".
+                    </div>
+                  </div>
+                </div>
+                <iframe 
+                  ref={iframeRef}
+                  srcDoc={htmlContent}
+                  title="Resume Preview"
+                  width="100%"
+                  height="100%"
+                  sandbox="allow-same-origin allow-scripts"
+                />
+              </>
             )}
 
             {isRendering && <div className="loading">Rendering your HTML...</div>}
+            
+            {showAiEdit && (
+              <AIEdit
+                position={aiEditPosition}
+                selectedElement={selectedElement}
+                onClose={() => setShowAiEdit(false)}
+                apiKey={apiKey}
+                aiModel={aiModel}
+                targetPath={currentFile.path}
+                files={files}
+                onUpdate={handleAiEditUpdate}
+              />
+            )}
           </div>
         </main>
       </div>
@@ -474,7 +606,13 @@ body {
       <APIKeyModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onSave={(key) => setApiKey(key)}
+        onSave={(key, model) => {
+          setApiKey(key);
+          setAiModel(model);
+          localStorage.setItem('openai_api_key', key);
+          setShowModal(false);
+        }}
+        initialValue={apiKey}
       />
     </>
   );
