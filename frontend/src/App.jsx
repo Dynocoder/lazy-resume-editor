@@ -334,6 +334,35 @@ body {
     font-family: Arial, sans-serif;
 }`;
       }
+    } else if (type === 'job-description') {
+      newFileName = `job_description.txt`;
+      newContent = `# Job Description
+
+Position Title: 
+Company: 
+Location: 
+
+## Job Summary
+[Enter job summary here]
+
+## Responsibilities
+- 
+- 
+- 
+
+## Requirements
+- 
+- 
+- 
+
+## Preferred Qualifications
+- 
+- 
+- 
+
+## Notes
+[Add any additional notes here]
+`;
     } else {
       newFileName = 'new_folder';
     }
@@ -342,12 +371,13 @@ body {
       name: newFileName,
       path: newFileName,
       content: newContent,
-      type: type === 'file' ? 'file' : 'folder',
+      type: type === 'folder' ? 'folder' : 'file',
+      fileType: type === 'job-description' ? 'job-description' : 'regular',
       children: type === 'folder' ? [] : undefined,
     };
 
     setFiles(prev => [...prev, newFile]);
-    if (type === 'file') {
+    if (type === 'file' || type === 'job-description') {
       setCurrentFile(newFile);
       setFileToRename(newFileName);
     }
@@ -397,8 +427,11 @@ body {
     setError(null);
 
     try {
+      // Filter out job description files for rendering
+      const renderableFiles = files.filter(f => f.fileType !== 'job-description');
+      
       const response = await axios.post(`${BACKEND_URL}/render`, {
-        files: files,
+        files: renderableFiles,
         mainFile: 'index.html'
       });
 
@@ -482,10 +515,13 @@ body {
         return;
       }
       
+      // Filter out job description files for PDF export
+      const renderableFiles = files.filter(f => f.fileType !== 'job-description');
+      
       // Generate PDF
       const response = await axios.post(
         `${BACKEND_URL}/export-pdf`, 
-        { files, mainFile: 'index.html' }, 
+        { files: renderableFiles, mainFile: 'index.html' }, 
         { responseType: 'blob', validateStatus: status => status < 600 }
       );
       
@@ -575,10 +611,17 @@ body {
 
   // Handle AI edits
   const handleAiEditUpdate = (updatedFiles) => {
-    setFiles(updatedFiles);
+    // Preserve job description files and merge with updated files
+    const jobDescriptionFiles = files.filter(f => f.fileType === 'job-description');
+    const nonJobDescFiles = updatedFiles.filter(f => f.fileType !== 'job-description');
+    
+    // Combine both sets of files
+    const combinedFiles = [...nonJobDescFiles, ...jobDescriptionFiles];
+    
+    setFiles(combinedFiles);
     
     // Find and update the current file if it was changed
-    const updatedCurrentFile = updatedFiles.find(f => f.path === currentFile.path);
+    const updatedCurrentFile = combinedFiles.find(f => f.path === currentFile.path);
     if (updatedCurrentFile) {
       setCurrentFile(updatedCurrentFile);
     }
@@ -611,11 +654,12 @@ body {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Determine the language for the Monaco editor based on file extension
+  // Modified to handle job description files
   const getEditorLanguage = () => {
     if (currentFile.path.endsWith('.html')) return 'html';
     if (currentFile.path.endsWith('.css')) return 'css';
     if (currentFile.path.endsWith('.js')) return 'javascript';
+    if (currentFile.fileType === 'job-description') return 'markdown';
     return 'plaintext';
   };
 
@@ -627,6 +671,16 @@ body {
       setIsResumeUploaderOpen(true);
     }
   };
+
+  // Warn user before leaving or refreshing
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   return (
     <>
@@ -681,6 +735,11 @@ body {
           />
 
           <div className="editor-pane">
+            {currentFile.fileType === 'job-description' && (
+              <div className="job-description-indicator">
+                Job Description: add your job description for AI reference.
+              </div>
+            )}
             <Editor
               height="90vh"
               defaultLanguage={getEditorLanguage()}

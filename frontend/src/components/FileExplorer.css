@@ -148,3 +148,20 @@
     border-bottom: 1px solid #3c3c3c;
   }
 }
+
+/* Add these styles to FileExplorer.css */
+
+.job-description .file-content svg {
+  color: #57f6ce !important;
+}
+  
+.job-file-icon {
+  color: #424255 !important;
+}
+
+/* Adjust styles for job description items in the file explorer */
+
+
+.file-item.job-description:hover {
+  background-color: #3c3c3c;
+}
