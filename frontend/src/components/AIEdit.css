@@ -1,0 +1,106 @@
+.ai-edit-container {
+  position: absolute;
+  width: 300px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 1000;
+  animation: slide-in 0.2s ease-out;
+  border: 1px solid #e0e0e0;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.ai-edit-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.ai-edit-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #777;
+  padding: 0;
+  line-height: 1;
+}
+
+.ai-edit-close:hover {
+  color: #333;
+}
+
+.ai-edit-content {
+  padding: 15px;
+}
+
+.ai-edit-element-info {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #555;
+}
+
+.ai-edit-element-info code {
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.ai-edit-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  background-color: #fff;
+  color: #000;
+}
+
+.ai-edit-input::placeholder {
+  color: #888;
+}
+
+.ai-edit-button {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.ai-edit-button:hover {
+  background-color: #3a7bc8;
+}
+
+.ai-edit-button:disabled {
+  background-color: #b2c7e6;
+  cursor: not-allowed;
+}
+
+.ai-edit-error {
+  color: #e53935;
+  font-size: 13px;
+  margin-bottom: 10px;
+  padding: 8px;
+  background-color: #ffebee;
+  border-radius: 4px;
+} 

@@ -1,0 +1,27 @@
+bin
+include
+lib
+lib64
+pyvenv.cfg
+
+# Backend virtual environment
+/backend/venv/
+
+# Frontend dependencies
+/frontend/node_modules/
+
+# Build output directories
+/dist/
+/build/
+
+# IDE and editor folders
+.vscode/
+.idea/
+
+# Environment and log files
+.env
+.env.local
+*.log
+
+# OS generated files
+.DS_Store
