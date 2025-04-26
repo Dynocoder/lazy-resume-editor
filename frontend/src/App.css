@@ -100,6 +100,12 @@ main {
   overflow: auto;
 }
 
+/* Add this new CSS to fix the AI edit box positioning */
+.preview-pane > * {
+  position: relative;
+  z-index: 1;
+}
+
 .preview-pane iframe {
   border: none;
   width: 100%;
@@ -308,7 +314,7 @@ main {
   padding: 6px 12px;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .toolbar-button:hover {
@@ -328,4 +334,12 @@ main {
   font-size: 14px;
   text-align: center;
   font-weight: 500;
+}
+
+/* Fix for AI Edit positioning */
+.ai-edit-container {
+  position: fixed !important; /* Override absolute positioning */
+  z-index: 1000 !important;
+  max-width: 300px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }

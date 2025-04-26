@@ -6,6 +6,7 @@ import AIEdit from './components/AIEdit';
 import './App.css';
 import APIKeyModal from './components/APIKeyModal';
 import ResumeUploader from './components/ResumeUploader';
+import { generateDirectEditScript, handleContentUpdate } from './components/DirectTextEditor';
 
 // Backend URL configuration
 const BACKEND_URL = 'http://localhost:5001';
@@ -436,50 +437,10 @@ Location:
         mainFile: 'index.html'
       });
 
-      // Selection script for AI editing functionality
+      // Use the direct edit script from the imported component
       const selectionScript = `
       <script>
-        document.addEventListener('mouseup', function(e) {
-          const selection = window.getSelection();
-          if (!selection.isCollapsed) {
-            // Get selected element
-            const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-            if (!range) return;
-            
-            // Get element, handling text nodes by getting parent
-            let element = range.commonAncestorContainer;
-            if (element.nodeType === 3) element = element.parentElement;
-            
-            // If element is body or invalid, try to get a more specific element
-            if (!element || element.tagName === 'BODY') {
-              const selectedNode = range.startContainer;
-              element = selectedNode.nodeType === 3 ? selectedNode.parentElement : selectedNode;
-            }
-            
-            if (!element || !element.tagName) return;
-            
-            // Send element info to parent
-            const rect = element.getBoundingClientRect();
-            window.parent.postMessage({
-              type: 'elementSelected',
-              element: {
-                tagName: element.tagName,
-                id: element.id || '',
-                className: element.className || '',
-                textContent: element.textContent ? 
-                  (element.textContent.length > 50 ? 
-                    element.textContent.substring(0, 50) + '...' : 
-                    element.textContent) : 
-                  '',
-                html: element.outerHTML || ''
-              },
-              position: {
-                x: rect.left + window.scrollX,
-                y: rect.top + window.scrollY
-              }
-            }, '*');
-          }
-        });
+        ${generateDirectEditScript()}
       </script>`;
       
       // Process CSS files
@@ -642,30 +603,29 @@ Location:
 
   // Handle messages from the iframe
   useEffect(() => {
+    // Create a combined message handler
     const handleMessage = (event) => {
-      if (event.data && event.data.type === 'elementSelected') {
-        // Store the selected element data
+      if (event.data?.type === 'elementSelected' && event.data.element) {
         setSelectedElement(event.data.element);
         
-        // Calculate position for the AI Edit box
-        // Get the iframe position
-        const iframe = iframeRef.current;
-        if (iframe) {
-          const iframeRect = iframe.getBoundingClientRect();
-          
-          setAiEditPosition({
-            x: iframeRect.left + event.data.position.x,
-            y: iframeRect.top + event.data.position.y
-          });
-          
-          setShowAiEdit(true);
-        }
+        // Calculate position for AI edit popup
+        const iframeRect = iframeRef.current.getBoundingClientRect();
+        setAiEditPosition({
+          x: iframeRect.left + event.data.position.x,
+          y: iframeRect.top + event.data.position.y
+        });
+        
+        setShowAiEdit(true);
       }
+      
+      // Use the imported handler for content updates
+      const contentUpdateHandler = handleContentUpdate(files, currentFile, setFiles, setCurrentFile, renderHtml);
+      contentUpdateHandler(event);
     };
     
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [files, currentFile.path]);
 
   // Modified to handle job description files
   const getEditorLanguage = () => {
@@ -794,6 +754,12 @@ Location:
                     <span className="ai-edit-tooltip-icon">ℹ️</span>
                     <div className="ai-edit-tooltip-text">
                       Select any text or element to access AI edit. Type your instruction, like "make it bold" or "change text color to blue".
+                    </div>
+                  </div>
+                  <div className="ai-edit-tooltip" style={{ marginLeft: '10px' }}>
+                    <span className="ai-edit-tooltip-icon">✏️</span>
+                    <div className="ai-edit-tooltip-text">
+                      Click on text to edit. Select text to use AI editing. Press Enter when done.
                     </div>
                   </div>
                 </div>
