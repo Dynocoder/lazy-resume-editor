@@ -223,7 +223,7 @@ body {
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
     color: #333;
-    background-color: #f5f5f5;
+    background-color:rgb(27, 24, 24);
     margin: 0;
     padding: 0;
 }
@@ -308,6 +308,8 @@ function App() {
 
   // Resume Uploader state
   const [isResumeUploaderOpen, setIsResumeUploaderOpen] = useState(false);
+  // Toggle for HTML editor pane visibility
+  const [showEditor, setShowEditor] = useState(true);
 
   const handleFileSelect = (file) => {
     setCurrentFile(file);
@@ -675,6 +677,13 @@ Location:
             Redo
           </button>
           <button
+            onClick={() => setShowEditor(prev => !prev)}
+            className="toolbar-button"
+            title="Toggle HTML Editor"
+          >
+            {showEditor ? 'Hide HTML' : 'Show HTML'}
+          </button>
+          <button
             onClick={handleResumeUpload}
             className="toolbar-button"
             title="Upload Resume"
@@ -713,36 +722,40 @@ Location:
         </header>
 
         <main>
-          <FileExplorer
-            files={files}
-            currentFile={currentFile}
-            onFileSelect={handleFileSelect}
-            onCreateFile={handleFileAdd}
-            onDeleteFile={handleFileDelete}
-            onRenameFile={handleFileRename}
-          />
-
-          <div className="editor-pane">
-            {currentFile.fileType === 'job-description' && (
-              <div className="job-description-indicator">
-                Job Description: add your job description for AI reference.
-              </div>
-            )}
-            <Editor
-              height="90vh"
-              defaultLanguage={getEditorLanguage()}
-              language={getEditorLanguage()}
-              value={currentFile.content}
-              onChange={handleEditorChange}
-              onMount={(editor) => { editorRef.current = editor; }}
-              theme="vs-dark"
-              options={{
-                fontSize: 14,
-                minimap: { enabled: false },
-                wordWrap: 'on',
-              }}
+          {showEditor && (
+            <>
+            <FileExplorer
+              files={files}
+              currentFile={currentFile}
+              onFileSelect={handleFileSelect}
+              onCreateFile={handleFileAdd}
+              onDeleteFile={handleFileDelete}
+              onRenameFile={handleFileRename}
             />
-          </div>
+
+            <div className="editor-pane">
+              {currentFile.fileType === 'job-description' && (
+                <div className="job-description-indicator">
+                  Job Description: add your job description for AI reference.
+                </div>
+              )}
+              <Editor
+                height="90vh"
+                defaultLanguage={getEditorLanguage()}
+                language={getEditorLanguage()}
+                value={currentFile.content}
+                onChange={handleEditorChange}
+                onMount={(editor) => { editorRef.current = editor; }}
+                theme="vs-dark"
+                options={{
+                  fontSize: 14,
+                  minimap: { enabled: false },
+                  wordWrap: 'on',
+                }}
+              />
+            </div>
+            </>
+          )}
 
           <div className="preview-pane">
             {error && <div className="error-message">{error}</div>}
