@@ -298,7 +298,7 @@ function App() {
   const [fileToRename, setFileToRename] = useState(null);
   const renderTimeoutRef = useRef(null);
   const iframeRef = useRef(null);
-  
+
   // AI Edit state
   const [selectedElement, setSelectedElement] = useState(null);
   const [aiEditPosition, setAiEditPosition] = useState({ x: 0, y: 0 });
@@ -313,11 +313,11 @@ function App() {
 
   const handleFileAdd = (type) => {
     let newFileName, newContent = '';
-    
+
     if (type === 'file') {
       const extension = currentFile.path.endsWith('.css') ? '.css' : '.html';
       newFileName = `untitled_${files.length}${extension}`;
-      
+
       if (extension === '.html') {
         newContent = `<!DOCTYPE html>
 <html>
@@ -334,20 +334,50 @@ body {
     font-family: Arial, sans-serif;
 }`;
       }
+    } else if (type === 'job-description') {
+      newFileName = `job_description.txt`;
+      newContent = `# Job Description
+
+Position Title: 
+Company: 
+Location: 
+
+## Job Summary
+[Enter job summary here]
+
+## Responsibilities
+- 
+- 
+- 
+
+## Requirements
+- 
+- 
+- 
+
+## Preferred Qualifications
+- 
+- 
+- 
+
+## Notes
+[Add any additional notes here]
+`;
     } else {
       newFileName = 'new_folder';
     }
-    
+
     const newFile = {
       name: newFileName,
       path: newFileName,
       content: newContent,
-      type: type === 'file' ? 'file' : 'folder',
+      type: type === 'folder' ? 'folder' : 'file',
+      fileType: type === 'job-description' ? 'job-description' : 'regular',
       children: type === 'folder' ? [] : undefined,
     };
 
     setFiles(prev => [...prev, newFile]);
-    if (type === 'file') {
+    if (type === 'file' || type === 'job-description') {
       setCurrentFile(newFile);
       setFileToRename(newFileName);
     }
@@ -382,7 +412,7 @@ body {
     });
     setFiles(updatedFiles);
     setCurrentFile({ ...currentFile, content: value });
-    
+
     // Auto-render on content change (with debounce)
     if (renderTimeoutRef.current) {
       clearTimeout(renderTimeoutRef.current);
@@ -397,8 +427,11 @@ body {
     setError(null);
 
     try {
+      // Filter out job description files for rendering
+      const renderableFiles = files.filter(f => f.fileType !== 'job-description');
+
       const response = await axios.post(`${BACKEND_URL}/render`, {
-        files: files,
+        files: renderableFiles,
         mainFile: 'index.html'
       });
 
@@ -447,20 +480,20 @@ body {
           }
         });
       </script>`;
-      
+
       // Process CSS files
       const cssFiles = response.data.css_files || {};
       const inlineStyles = Object.entries(cssFiles)
         .map(([path, content]) => `<style data-source="${path}">${content}</style>`)
         .join('');
-      
+
       // Add CSS and script to HTML
       let html = response.data.html;
       if (inlineStyles) {
         html = html.replace('</head>', `${inlineStyles}</head>`);
       }
       html = html.replace('</body>', `${selectionScript}</body>`);
-      
+
       setHtmlContent(html);
     } catch (err) {
       console.error('Render error:', err);
@@ -474,21 +507,17 @@ body {
     try {
       setIsRendering(true);
       setError(null);
-      
-      // Check WeasyPrint availability
-      // const statusResponse = await axios.get(`${BACKEND_URL}/weasyprint-status`);
-      // if (!statusResponse.data.available) {
-      //   setError('PDF export not available: WeasyPrint is not properly installed on the server.');
-      //   return;
-      // }
+
+      // Filter out job description files for PDF export
+      const renderableFiles = files.filter(f => f.fileType !== 'job-description');
 
       // Generate PDF
       const response = await axios.post(
-        `${BACKEND_URL}/export-pdf`, 
-        { files, mainFile: 'index.html' }, 
+        `${BACKEND_URL}/export-pdf`,
+        { files: renderableFiles, mainFile: 'index.html' },
         { responseType: 'blob', validateStatus: status => status < 600 }
       );
-      
+
       // Handle non-PDF responses (errors)
       if (response.headers['content-type'] === 'application/json') {
         const text = await response.data.text();
@@ -496,12 +525,12 @@ body {
         setError(`PDF export failed: ${errorJson.error || 'Server error'}`);
         return;
       }
-      
+
       if (response.status !== 200) {
         setError(`PDF export failed: Server returned status ${response.status}`);
         return;
       }
-      
+
       // Download the PDF
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
@@ -510,7 +539,7 @@ body {
       link.setAttribute('download', 'resume.pdf');
       document.body.appendChild(link);
       link.click();
-      
+
       // Cleanup
       setTimeout(() => {
         window.URL.revokeObjectURL(url);
@@ -532,9 +561,9 @@ body {
     try {
       setIsRendering(true);
       setError(null);
-      
+
       const response = await axios.get(`${BACKEND_URL}/test-weasyprint`);
-      
+
       if (response.data.status === 'success') {
         alert(`WeasyPrint is working correctly! PDF size: ${response.data.pdf_size} bytes`);
       } else {
@@ -554,7 +583,7 @@ body {
   // Render on first load and when files change
   useEffect(() => {
     renderHtml();
-    
+
     // Cleanup function to clear any pending timeouts
     return () => {
       if (renderTimeoutRef.current) {
@@ -562,7 +591,7 @@ body {
       }
     };
   }, []);
-  
+
   // Auto-render when switching files
   useEffect(() => {
     renderHtml();
@@ -575,10 +604,17 @@ body {
 
   // Handle AI edits
   const handleAiEditUpdate = (updatedFiles) => {
-    setFiles(updatedFiles);
-    
+    // Preserve job description files and merge with updated files
+    const jobDescriptionFiles = files.filter(f => f.fileType === 'job-description');
+    const nonJobDescFiles = updatedFiles.filter(f => f.fileType !== 'job-description');
+
+    // Combine both sets of files
+    const combinedFiles = [...nonJobDescFiles, ...jobDescriptionFiles];
+
+    setFiles(combinedFiles);
+
     // Find and update the current file if it was changed
-    const updatedCurrentFile = updatedFiles.find(f => f.path === currentFile.path);
+    const updatedCurrentFile = combinedFiles.find(f => f.path === currentFile.path);
     if (updatedCurrentFile) {
       setCurrentFile(updatedCurrentFile);
     }
@@ -590,32 +626,33 @@ body {
       if (event.data && event.data.type === 'elementSelected') {
         // Store the selected element data
         setSelectedElement(event.data.element);
-        
+
         // Calculate position for the AI Edit box
         // Get the iframe position
         const iframe = iframeRef.current;
         if (iframe) {
           const iframeRect = iframe.getBoundingClientRect();
-          
+
           setAiEditPosition({
             x: iframeRect.left + event.data.position.x,
             y: iframeRect.top + event.data.position.y
           });
-          
+
           setShowAiEdit(true);
         }
       }
     };
-    
+
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Determine the language for the Monaco editor based on file extension
+  // Modified to handle job description files
   const getEditorLanguage = () => {
     if (currentFile.path.endsWith('.html')) return 'html';
     if (currentFile.path.endsWith('.css')) return 'css';
     if (currentFile.path.endsWith('.js')) return 'javascript';
+    if (currentFile.fileType === 'job-description') return 'markdown';
     return 'plaintext';
   };
 
@@ -627,6 +664,16 @@ body {
       setIsResumeUploaderOpen(true);
     }
   };
+
+  // Warn user before leaving or refreshing
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   return (
     <>
@@ -664,7 +711,7 @@ body {
             title="Upload Resume"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146-2-2a.5.5 0 0 0-.708 0l-2 2a.5.5 0 1 0 .708.708L7.5 6.707V10.5a.5.5 0 0 0 1 0V6.707l1.146 1.147a.5.5 0 0 0 .708-.708z"/>
+              <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146-2-2a.5.5 0 0 0-.708 0l-2 2a.5.5 0 1 0 .708.708L7.5 6.707V10.5a.5.5 0 0 0 1 0V6.707l1.146 1.147a.5.5 0 0 0 .708-.708z" />
             </svg>
             Upload Resume
           </button>
@@ -681,6 +728,11 @@ body {
           />
 
           <div className="editor-pane">
+            {currentFile.fileType === 'job-description' && (
+              <div className="job-description-indicator">
+                Job Description: add your job description for AI reference.
+              </div>
+            )}
             <Editor
               height="90vh"
               defaultLanguage={getEditorLanguage()}
@@ -709,7 +761,7 @@ body {
                     </div>
                   </div>
                 </div>
-                <iframe 
+                <iframe
                   ref={iframeRef}
                   srcDoc={htmlContent}
                   title="Resume Preview"
@@ -721,7 +773,7 @@ body {
             )}
 
             {isRendering && <div className="loading">Rendering your HTML...</div>}
-            
+
             {showAiEdit && (
               <AIEdit
                 position={aiEditPosition}

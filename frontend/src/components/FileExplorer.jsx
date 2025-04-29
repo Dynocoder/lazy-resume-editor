@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaEdit, FaFile, FaFolder, FaFolderOpen, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaFile, FaFolder, FaFolderOpen, FaPlus, FaTrash, FaFileAlt } from 'react-icons/fa';
 import './FileExplorer.css';
 
 const FileExplorer = ({
@@ -34,6 +34,7 @@ const FileExplorer = ({
 
   const renderFile = (file, level = 0) => {
     const isFolder = file.type === 'folder';
+    const isJobDescription = file.fileType === 'job-description';
     const isExpanded = expandedFolders.has(file.path);
     const paddingLeft = `${level * 20}px`;
 
@@ -54,9 +55,9 @@ const FileExplorer = ({
     }
 
     return (
-      <div key={file.path} style={{ paddingLeft }} className={`file-item ${currentFile.path === file.path ? 'bg-gray-700' : ''}`}>
+      <div key={file.path} style={{ paddingLeft }} className={`file-item ${currentFile.path === file.path ? 'bg-gray-700' : ''} ${isJobDescription ? 'job-description' : ''}`}>
         <div className="file-content">
-          <FaFile />
+          {isJobDescription ? <FaFileAlt className="job-file-icon" /> : <FaFile />}
           {renamingFile === file.path ? (
             <input
               type="text"
@@ -90,7 +91,10 @@ const FileExplorer = ({
         <button onClick={() => onCreateFile('file')} title="Add File">
           <FaPlus />
         </button>
-        <button onClick={() => onCreateFile('folder')} title="Add File">
+        <button onClick={() => onCreateFile('job-description')} title="Add Job Description">
+          <FaFileAlt />
+        </button>
+        <button onClick={() => onCreateFile('folder')} title="Add Folder">
           <FaFolder />
         </button>
       </div>

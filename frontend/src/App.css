@@ -92,11 +92,12 @@ main {
 }
 
 .preview-pane {
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  min-width: 0;
-  overflow: auto;
-  background-color: #fff;
+  background-color: #252526;
   position: relative;
+  overflow: auto;
 }
 
 .preview-pane iframe {
@@ -317,4 +318,14 @@ main {
 .toolbar-button svg {
   width: 16px;
   height: 16px;
+}
+
+/* Add styling for job description indicator */
+.job-description-indicator {
+  background-color: #3c3c3c;
+  color: #e0e0e0;
+  padding: 8px 12px;
+  font-size: 14px;
+  text-align: center;
+  font-weight: 500;
 }
