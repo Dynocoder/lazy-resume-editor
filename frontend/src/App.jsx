@@ -476,12 +476,12 @@ body {
       setError(null);
       
       // Check WeasyPrint availability
-      const statusResponse = await axios.get(`${BACKEND_URL}/weasyprint-status`);
-      if (!statusResponse.data.available) {
-        setError('PDF export not available: WeasyPrint is not properly installed on the server.');
-        return;
-      }
-      
+      // const statusResponse = await axios.get(`${BACKEND_URL}/weasyprint-status`);
+      // if (!statusResponse.data.available) {
+      //   setError('PDF export not available: WeasyPrint is not properly installed on the server.');
+      //   return;
+      // }
+
       // Generate PDF
       const response = await axios.post(
         `${BACKEND_URL}/export-pdf`, 
