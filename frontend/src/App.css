@@ -97,7 +97,7 @@ main {
   flex: 1;
   background-color: #252526;
   position: relative;
-  overflow: auto;
+  overflow: visible !important;
 }
 
 /* Add this new CSS to fix the AI edit box positioning */
@@ -245,13 +245,14 @@ main {
 .ai-edit-instructions {
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: 80px;
   z-index: 900;
 }
 
 .ai-edit-tooltip {
   position: relative;
   display: inline-block;
+  overflow: visible;
 }
 
 .ai-edit-tooltip-icon {
@@ -278,9 +279,11 @@ main {
   border-radius: 6px;
   padding: 12px;
   position: absolute;
-  z-index: 1;
+  z-index: 2000 !important;
   bottom: 125%;
-  right: 0;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
   opacity: 0;
   transition: opacity 0.3s;
   font-size: 14px;
@@ -301,6 +304,50 @@ main {
 .ai-edit-tooltip:hover .ai-edit-tooltip-text {
   visibility: visible;
   opacity: 1;
+}
+
+/* Position first AI tooltip (info icon) to the left of its icon */
+.ai-edit-instructions .ai-edit-tooltip:nth-child(1) .ai-edit-tooltip-text {
+  top: 50% !important;
+  bottom: auto !important;
+  right: calc(100% + 10px) !important;
+  left: auto !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Adjust arrow for left-side info tooltip */
+.ai-edit-instructions .ai-edit-tooltip:nth-child(1) .ai-edit-tooltip-text::after {
+  top: 50% !important;
+  left: 100% !important;
+  right: auto !important;
+  border-color: transparent transparent transparent rgba(47, 53, 66, 0.95) !important;
+  border-width: 8px 0 8px 8px !important;
+  border-style: solid !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Position second AI tooltip (edit icon) to the left of its icon */
+.ai-edit-instructions .ai-edit-tooltip:nth-child(2) .ai-edit-tooltip-text {
+  /* place vertically centered */
+  top: 50% !important;
+  bottom: auto !important;
+  /* move to left of icon */
+  right: calc(100% + 10px) !important;
+  left: auto !important;
+  /* center vertically */
+  transform: translateY(-50%) !important;
+}
+
+/* Adjust arrow for left-side tooltip */
+.ai-edit-instructions .ai-edit-tooltip:nth-child(2) .ai-edit-tooltip-text::after {
+  top: 50% !important;
+  left: 100% !important;
+  right: auto !important;
+  /* make arrow point to the right */
+  border-color: transparent transparent transparent rgba(47, 53, 66, 0.95) !important;
+  border-width: 8px 0 8px 8px !important;
+  border-style: solid !important;
+  transform: translateY(-50%) !important;
 }
 
 /* Find your existing toolbar-button styles and ensure they're applied to the new button */
@@ -342,4 +389,10 @@ main {
   z-index: 1000 !important;
   max-width: 300px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Allow AI edit tooltips to overflow ancestor containers */
+.app,
+main {
+  overflow: visible !important;
 }
