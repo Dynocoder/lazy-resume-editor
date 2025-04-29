@@ -1,4 +1,5 @@
 from codecs import ignore_errors
+from weasyprint import HTML, CSS
 from io import BytesIO
 import os
 import shutil
@@ -39,7 +40,7 @@ class ResumeService:
 
             base_url = f"file://{os.path.dirname(main_file_path)}/"
             html = HTML(filename=main_file_path, base_url=base_url)
-            pdf_buffer = BytesIO
+            pdf_buffer = BytesIO()
 
             try:
                 html.write_pdf(pdf_buffer, stylesheets=[CSS(string='@page { size: letter; margin: 0; }')])

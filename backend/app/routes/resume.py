@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify
+from io import BytesIO
+from flask import Blueprint, request, jsonify, send_file
 from app.services.resume_service import ResumeService
 import tempfile
 import shutil
@@ -60,7 +61,6 @@ def export_pdf():
     main_file = request.json.get('mainFile', 'index.html')
 
     try:
-        # Delegate PDF generation to the service
         pdf_buffer = resume_service.export_pdf(files, main_file)
 
         return send_file(
