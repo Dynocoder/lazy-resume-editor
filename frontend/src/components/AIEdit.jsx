@@ -16,8 +16,35 @@ const AIEdit = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const inputRef = useRef(null);
+  const containerRef = useRef(null);
   
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => { 
+    inputRef.current?.focus(); 
+  
+    // Adjust position if it would go off-screen
+    if (containerRef.current) {
+      const container = containerRef.current;
+      const rect = container.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      let adjustedX = position.x;
+      let adjustedY = position.y;
+      
+      // Check if too far right
+      if (position.x + rect.width > viewportWidth - 20) {
+        adjustedX = Math.max(20, viewportWidth - rect.width - 20);
+      }
+      
+      // Check if too far down
+      if (position.y + rect.height > viewportHeight - 20) {
+        adjustedY = Math.max(20, viewportHeight - rect.height - 20);
+      }
+      
+      container.style.left = `${adjustedX}px`;
+      container.style.top = `${adjustedY}px`;
+    }
+  }, [position]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,6 +100,7 @@ const AIEdit = ({
 
   return (
     <div 
+      ref={containerRef}
       className="ai-edit-container" 
       style={{ 
         top: `${position.y}px`, 
