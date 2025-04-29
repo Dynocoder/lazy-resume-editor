@@ -317,11 +317,11 @@ function App() {
 
   const handleFileAdd = (type) => {
     let newFileName, newContent = '';
-    
+
     if (type === 'file') {
       const extension = currentFile.path.endsWith('.css') ? '.css' : '.html';
       newFileName = `untitled_${files.length}${extension}`;
-      
+
       if (extension === '.html') {
         newContent = `<!DOCTYPE html>
 <html>
@@ -370,7 +370,7 @@ Location:
     } else {
       newFileName = 'new_folder';
     }
-    
+
     const newFile = {
       name: newFileName,
       path: newFileName,
@@ -416,7 +416,7 @@ Location:
     });
     setFiles(updatedFiles);
     setCurrentFile({ ...currentFile, content: value });
-    
+
     // Auto-render on content change (with debounce)
     if (renderTimeoutRef.current) {
       clearTimeout(renderTimeoutRef.current);
@@ -433,7 +433,7 @@ Location:
     try {
       // Filter out job description files for rendering
       const renderableFiles = files.filter(f => f.fileType !== 'job-description');
-      
+
       const response = await axios.post(`${BACKEND_URL}/render`, {
         files: renderableFiles,
         mainFile: 'index.html'
@@ -444,20 +444,20 @@ Location:
       <script>
         ${generateDirectEditScript()}
       </script>`;
-      
+
       // Process CSS files
       const cssFiles = response.data.css_files || {};
       const inlineStyles = Object.entries(cssFiles)
         .map(([path, content]) => `<style data-source="${path}">${content}</style>`)
         .join('');
-      
+
       // Add CSS and script to HTML
       let html = response.data.html;
       if (inlineStyles) {
         html = html.replace('</head>', `${inlineStyles}</head>`);
       }
       html = html.replace('</body>', `${selectionScript}</body>`);
-      
+
       setHtmlContent(html);
     } catch (err) {
       console.error('Render error:', err);
@@ -471,24 +471,17 @@ Location:
     try {
       setIsRendering(true);
       setError(null);
-      
-      // Check WeasyPrint availability
-      const statusResponse = await axios.get(`${BACKEND_URL}/weasyprint-status`);
-      if (!statusResponse.data.available) {
-        setError('PDF export not available: WeasyPrint is not properly installed on the server.');
-        return;
-      }
-      
+
       // Filter out job description files for PDF export
       const renderableFiles = files.filter(f => f.fileType !== 'job-description');
-      
+
       // Generate PDF
       const response = await axios.post(
-        `${BACKEND_URL}/export-pdf`, 
-        { files: renderableFiles, mainFile: 'index.html' }, 
+        `${BACKEND_URL}/export-pdf`,
+        { files: renderableFiles, mainFile: 'index.html' },
         { responseType: 'blob', validateStatus: status => status < 600 }
       );
-      
+
       // Handle non-PDF responses (errors)
       if (response.headers['content-type'] === 'application/json') {
         const text = await response.data.text();
@@ -496,12 +489,12 @@ Location:
         setError(`PDF export failed: ${errorJson.error || 'Server error'}`);
         return;
       }
-      
+
       if (response.status !== 200) {
         setError(`PDF export failed: Server returned status ${response.status}`);
         return;
       }
-      
+
       // Download the PDF
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
@@ -510,7 +503,7 @@ Location:
       link.setAttribute('download', 'resume.pdf');
       document.body.appendChild(link);
       link.click();
-      
+
       // Cleanup
       setTimeout(() => {
         window.URL.revokeObjectURL(url);
@@ -532,9 +525,9 @@ Location:
     try {
       setIsRendering(true);
       setError(null);
-      
+
       const response = await axios.get(`${BACKEND_URL}/test-weasyprint`);
-      
+
       if (response.data.status === 'success') {
         alert(`WeasyPrint is working correctly! PDF size: ${response.data.pdf_size} bytes`);
       } else {
@@ -566,7 +559,7 @@ Location:
   // Render on first load and when files change
   useEffect(() => {
     renderHtml();
-    
+
     // Cleanup function to clear any pending timeouts
     return () => {
       if (renderTimeoutRef.current) {
@@ -574,7 +567,7 @@ Location:
       }
     };
   }, []);
-  
+
   // Auto-render when switching files
   useEffect(() => {
     renderHtml();
@@ -590,12 +583,12 @@ Location:
     // Preserve job description files and merge with updated files
     const jobDescriptionFiles = files.filter(f => f.fileType === 'job-description');
     const nonJobDescFiles = updatedFiles.filter(f => f.fileType !== 'job-description');
-    
+
     // Combine both sets of files
     const combinedFiles = [...nonJobDescFiles, ...jobDescriptionFiles];
-    
+
     setFiles(combinedFiles);
-    
+
     // Find and update the current file if it was changed
     const updatedCurrentFile = combinedFiles.find(f => f.path === currentFile.path);
     if (updatedCurrentFile) {
@@ -624,7 +617,7 @@ Location:
       const contentUpdateHandler = handleContentUpdate(files, currentFile, setFiles, setCurrentFile, renderHtml);
       contentUpdateHandler(event);
     };
-    
+
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [files, currentFile.path]);
@@ -715,7 +708,7 @@ Location:
             Test WeasyPrint
           </button>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146-2-2a.5.5 0 0 0-.708 0l-2 2a.5.5 0 1 0 .708.708L7.5 6.707V10.5a.5.5 0 0 0 1 0V6.707l1.146 1.147a.5.5 0 0 0 .708-.708z"/>
+              <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146-2-2a.5.5 0 0 0-.708 0l-2 2a.5.5 0 1 0 .708.708L7.5 6.707V10.5a.5.5 0 0 0 1 0V6.707l1.146 1.147a.5.5 0 0 0 .708-.708z" />
             </svg>
             Upload Resume
           </button>
@@ -776,7 +769,7 @@ Location:
                     </div>
                   </div>
                 </div>
-                <iframe 
+                <iframe
                   ref={iframeRef}
                   srcDoc={htmlContent}
                   title="Resume Preview"
@@ -788,7 +781,7 @@ Location:
             )}
 
             {isRendering && <div className="loading">Rendering your HTML...</div>}
-            
+
             {showAiEdit && (
               <AIEdit
                 position={aiEditPosition}

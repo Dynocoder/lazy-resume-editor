@@ -1,0 +1,6 @@
+{
+  "include": ["app"],
+  "reportMissingImports": true,
+  "reportMissingModuleSource": true,
+  "extraPaths": ["./app"]
+}
