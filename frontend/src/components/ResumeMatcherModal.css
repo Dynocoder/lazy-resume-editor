@@ -1,0 +1,215 @@
+.resume-matcher-modal {
+  background-color: #2d2d2d;
+  border-radius: 5px;
+  padding: 0;
+  width: 600px;
+  max-width: 95%;
+  max-height: 95vh;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-matcher-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #3d3d3d;
+  border-bottom: 1px solid #444;
+}
+
+.resume-matcher-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #e0e0e0;
+}
+
+.resume-matcher-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.description-note {
+  color: #aaa;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.job-description-textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #1e1e1e;
+  color: white;
+  resize: vertical;
+}
+
+.file-upload-section {
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  border: 1px dashed #555;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #2a2a2a;
+  transition: all 0.2s;
+}
+
+.file-upload-label:hover {
+  background-color: #333;
+  border-color: #777;
+}
+
+.file-upload-input {
+  display: none;
+}
+
+.resume-matcher-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.match-button, .back-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #2196F3;
+  color: white;
+}
+
+.match-button:hover, .back-button:hover {
+  background-color: #0b7dda;
+}
+
+.match-button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+.cancel-button, .close-match-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #616161;
+  color: white;
+}
+
+.cancel-button:hover, .close-match-button:hover {
+  background-color: #757575;
+}
+
+.error-message {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  padding: 10px;
+  border-radius: 4px;
+  margin: 15px 0;
+}
+
+/* Match Results Styling */
+.match-results {
+  width: 100%;
+}
+
+.match-score {
+  margin-bottom: 25px;
+}
+
+.score-display {
+  background-color: #333;
+  height: 40px;
+  border-radius: 5px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 15px;
+}
+
+.score-meter {
+  height: 100%;
+  transition: width 1s ease-in-out;
+}
+
+.score-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+.keywords-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.matched-keywords, .missing-keywords {
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.matched-keywords {
+  background-color: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.missing-keywords {
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.keyword-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.keyword-tag {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 13px;
+}
+
+.keyword-tag.matched {
+  background-color: rgba(76, 175, 80, 0.2);
+  border: 1px solid rgba(76, 175, 80, 0.5);
+  color: #81c784;
+}
+
+.keyword-tag.missing {
+  background-color: rgba(244, 67, 54, 0.2);
+  border: 1px solid rgba(244, 67, 54, 0.5);
+  color: #e57373;
+}
+
+.no-keywords {
+  color: #aaa;
+  font-style: italic;
+}
+
+.existing-job-desc {
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 5px;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+} 
