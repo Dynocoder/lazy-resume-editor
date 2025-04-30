@@ -759,13 +759,13 @@ Location:
                   <div className="ai-edit-tooltip">
                     <span className="ai-edit-tooltip-icon">ℹ️</span>
                     <div className="ai-edit-tooltip-text">
-                      Select any text or element to access AI edit. Type your instruction, like "make it bold" or "change text color to blue".
+                      Select text to invoke AI edit.
                     </div>
                   </div>
                   <div className="ai-edit-tooltip" style={{ marginLeft: '10px' }}>
                     <span className="ai-edit-tooltip-icon">✏️</span>
                     <div className="ai-edit-tooltip-text">
-                      Click on text to edit. Select text to use AI editing. Press Enter when done.
+                      Click to edit; press Enter to save.
                     </div>
                   </div>
                 </div>
