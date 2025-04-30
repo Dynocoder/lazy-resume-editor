@@ -6,6 +6,9 @@ import argparse
 from PyPDF2 import PdfReader
 import io
 import json
+import tempfile
+import shutil
+from bs4 import BeautifulSoup
 
 from app import create_app
 
@@ -181,6 +184,56 @@ def upload_resume():
         'success': True,
         'updatedFiles': updated_files
     })
+
+@app.route('/match-resume', methods=['POST'])
+def match_resume():
+    """Process uploaded resume and job description for ATS matching"""
+    if 'file' not in request.files:
+        return jsonify({'error': 'No resume file provided'}), 400
+    
+    job_description = request.form.get('jobDescription')
+    if not job_description:
+        return jsonify({'error': 'Job description is required'}), 400
+    
+    try:
+        # Import here to prevent loading these dependencies for other routes
+        from bs4 import BeautifulSoup
+        from resume_matcher.matcher import match_resume_to_job
+        
+        resume_file = request.files['file']
+        print(f"Received file: {resume_file.filename}, size: {resume_file.content_length} bytes")
+        
+        # Extract text from the file
+        resume_text = ""
+        if resume_file.filename.lower().endswith(('.html', '.htm')):
+            print(f"Processing HTML file: {resume_file.filename}")
+            html_content = resume_file.read().decode('utf-8', errors='ignore')
+            soup = BeautifulSoup(html_content, 'html.parser')
+            resume_text = soup.get_text(separator=' ', strip=True)
+            print(f"Extracted {len(resume_text)} characters from HTML")
+        else:
+            # For PDF files, use PyPDF2 directly
+            from PyPDF2 import PdfReader
+            pdf_reader = PdfReader(resume_file)
+            for page in pdf_reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    resume_text += page_text + "\n"
+            print(f"Extracted {len(resume_text)} characters from PDF")
+        
+        if not resume_text.strip():
+            return jsonify({'error': 'No text could be extracted from the file'}), 400
+        
+        # Use the new text-based matching function
+        match_results = match_resume_to_job(resume_text, job_description)
+        
+        return jsonify({
+            'match_results': match_results
+        })
+        
+    except Exception as e:
+        print(f"Error processing resume: {str(e)}")
+        return jsonify({'error': f'Failed to process resume: {str(e)}'}), 500
 
 if __name__ == '__main__':
     # Parse command line arguments to allow changing port

@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 import os
 import json
 from PyPDF2 import PdfReader
+import io
 
 # TODO: update to /api/context
 bp = Blueprint("context_engine", __name__, url_prefix="")

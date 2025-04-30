@@ -77,6 +77,14 @@ header button:disabled {
 .test-button { background-color: #9c27b0 !important; }
 .test-button:hover { background-color: #7b1fa2 !important; }
 
+.match-resume-button {
+  background-color: #ff9800 !important;
+}
+
+.match-resume-button:hover {
+  background-color: #f57c00 !important;
+}
+
 main {
   display: flex;
   flex: 1;
