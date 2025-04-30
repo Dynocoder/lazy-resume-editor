@@ -289,8 +289,14 @@ h3 {
 ];
 
 function App() {
-  const [files, setFiles] = useState(initialFiles);
-  const [currentFile, setCurrentFile] = useState(initialFiles[0]);
+  const [files, setFiles] = useState(() => {
+    const storedFiles = localStorage.getItem('lazy_resume_files');
+    return storedFiles ? JSON.parse(storedFiles) : initialFiles;
+  });
+  const [currentFile, setCurrentFile] = useState(() => {
+    const storedFiles = localStorage.getItem('lazy_resume_files');
+    return storedFiles ? (JSON.parse(storedFiles)[0] || initialFiles[0]) : initialFiles[0];
+  });
   const [htmlContent, setHtmlContent] = useState('');
   const [isRendering, setIsRendering] = useState(false);
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('openai_api_key') || "");
@@ -659,6 +665,12 @@ Location:
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
+  // Save files to localStorage manually
+  const saveToLocalStorage = () => {
+    localStorage.setItem('lazy_resume_files', JSON.stringify(files));
+    alert('Files saved to localStorage!');
+  };
+
   return (
     <>
       <div className="app">
@@ -713,6 +725,13 @@ Location:
             className="toolbar-button export-button"
           >
             Export to PDF
+          </button>
+          <button
+            onClick={saveToLocalStorage}
+            className="toolbar-button"
+            title="Save to LocalStorage"
+          >
+            Save
           </button>
           <button
             onClick={handleResumeMatch}
