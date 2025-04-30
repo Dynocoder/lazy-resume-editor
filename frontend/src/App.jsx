@@ -326,26 +326,58 @@ function App() {
   };
 
   const handleFileAdd = async (type) => {
-    // Prompt and scrape job description if requested
+    // Handle job description type: scrape or manual input
     if (type === 'job-description') {
-      const url = prompt('Enter the Indeed job URL:');
-      if (!url) return;
-      try {
-        const response = await axios.post(`${BACKEND_URL}/scrape-job`, { url });
-        const description = response.data.description;
-        const newFile = {
-          name: 'job_description.txt',
-          path: 'job_description.txt',
-          content: description,
-          type: 'file',
-          fileType: 'job-description',
-        };
-        setFiles(prev => [...prev, newFile]);
-        setCurrentFile(newFile);
-        setFileToRename(newFile.name);
-      } catch (err) {
-        alert('Error scraping job description: ' + (err.response?.data?.error || err.message));
+      const url = prompt('Enter the Indeed job URL (leave blank to add manually):');
+      let description = '';
+      if (url) {
+        try {
+          const response = await axios.post(`${BACKEND_URL}/scrape-job`, { url });
+          description = response.data.description;
+        } catch (err) {
+          alert('Error scraping job description: ' + (err.response?.data?.error || err.message));
+          return;
+        }
+      } else {
+        // Default manual template
+        description = `# Job Description
+
+Position Title: 
+Company: 
+Location: 
+
+## Job Summary
+[Enter job summary here]
+
+## Responsibilities
++- 
++- 
++- 
+
+## Requirements
++- 
++- 
++- 
+
+## Preferred Qualifications
++- 
++- 
++- 
+
+## Notes
+[Add any additional notes here]
+`;
       }
+      const newFile = {
+        name: 'job_description.txt',
+        path: 'job_description.txt',
+        content: description,
+        type: 'file',
+        fileType: 'job-description',
+      };
+      setFiles(prev => [...prev, newFile]);
+      setCurrentFile(newFile);
+      setFileToRename(newFile.name);
       return;
     }
     let newFileName, newContent = '';
