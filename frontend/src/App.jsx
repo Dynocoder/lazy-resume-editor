@@ -325,7 +325,29 @@ function App() {
     setCurrentFile(file);
   };
 
-  const handleFileAdd = (type) => {
+  const handleFileAdd = async (type) => {
+    // Prompt and scrape job description if requested
+    if (type === 'job-description') {
+      const url = prompt('Enter the Indeed job URL:');
+      if (!url) return;
+      try {
+        const response = await axios.post(`${BACKEND_URL}/scrape-job`, { url });
+        const description = response.data.description;
+        const newFile = {
+          name: 'job_description.txt',
+          path: 'job_description.txt',
+          content: description,
+          type: 'file',
+          fileType: 'job-description',
+        };
+        setFiles(prev => [...prev, newFile]);
+        setCurrentFile(newFile);
+        setFileToRename(newFile.name);
+      } catch (err) {
+        alert('Error scraping job description: ' + (err.response?.data?.error || err.message));
+      }
+      return;
+    }
     let newFileName, newContent = '';
 
     if (type === 'file') {
@@ -348,35 +370,6 @@ body {
     font-family: Arial, sans-serif;
 }`;
       }
-    } else if (type === 'job-description') {
-      newFileName = `job_description.txt`;
-      newContent = `# Job Description
-
-Position Title: 
-Company: 
-Location: 
-
-## Job Summary
-[Enter job summary here]
-
-## Responsibilities
-- 
-- 
-- 
-
-## Requirements
-- 
-- 
-- 
-
-## Preferred Qualifications
-- 
-- 
-- 
-
-## Notes
-[Add any additional notes here]
-`;
     } else {
       newFileName = 'new_folder';
     }

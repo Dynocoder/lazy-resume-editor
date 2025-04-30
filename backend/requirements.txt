@@ -10,3 +10,6 @@ PyPDF2
 spacy==3.6.0
 textacy==0.13.0
 # Download: python -m spacy download en_core_web_sm
+
+requests==2.31.0
+beautifulsoup4==4.11.1

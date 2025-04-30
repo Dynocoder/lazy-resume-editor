@@ -11,6 +11,7 @@ import shutil
 from bs4 import BeautifulSoup
 
 from app import create_app
+from indeed_scraper import scrape_indeed_job
 
 app = create_app()
 
@@ -234,6 +235,20 @@ def match_resume():
     except Exception as e:
         print(f"Error processing resume: {str(e)}")
         return jsonify({'error': f'Failed to process resume: {str(e)}'}), 500
+
+# Add endpoint for scraping job descriptions
+@app.route('/scrape-job', methods=['POST'])
+def scrape_job():
+    """Scrape job description from an Indeed URL."""
+    data = request.get_json()
+    url = data.get('url')
+    if not url:
+        return jsonify({'error': 'URL is required'}), 400
+    try:
+        text = scrape_indeed_job(url)
+        return jsonify({'description': text}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     # Parse command line arguments to allow changing port
