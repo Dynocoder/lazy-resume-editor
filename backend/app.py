@@ -198,134 +198,42 @@ def match_resume():
     try:
         # Import here to prevent loading these dependencies for other routes
         from bs4 import BeautifulSoup
-        import re
-        
-        # Define our own keyword extraction function
-        def extract_keywords(text, top_n=20):
-            # Normalize text: lowercase and remove punctuation
-            text = re.sub(r'[^\w\s]', ' ', text.lower())
-            
-            # Split into words
-            words = text.split()
-            
-            # Simple list of stop words
-            stop_words = {
-                'a', 'an', 'the', 'and', 'or', 'but', 'if', 'because', 'as', 'what',
-                'when', 'where', 'how', 'which', 'who', 'whom', 'this', 'that', 'these',
-                'those', 'then', 'just', 'so', 'than', 'such', 'both', 'through', 'about',
-                'for', 'is', 'of', 'while', 'during', 'to', 'from', 'in', 'on', 'at', 'by',
-                'with', 'about', 'against', 'between', 'into', 'through', 'without', 'after',
-                'before', 'above', 'below', 'under', 'over', 'again', 'further', 'then', 'once',
-                'here', 'there', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more',
-                'most', 'other', 'some', 'such', 'only', 'own', 'same', 'too', 'very', 'can',
-                'will', 'should', 'now', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'have',
-                'has', 'had', 'having', 'do', 'does', 'did', 'doing'
-            }
-            filtered_words = [word for word in words if word not in stop_words and len(word) > 2]
-            
-            # Count word frequencies
-            word_counts = {}
-            for word in filtered_words:
-                if word in word_counts:
-                    word_counts[word] += 1
-                else:
-                    word_counts[word] = 1
-            
-            # Get the top N words by frequency
-            sorted_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
-            top_words = [word for word, count in sorted_words[:top_n]]
-            
-            return top_words
-            
-        # Calculate match score based on keyword overlap
-        def score_match(resume_keywords, job_keywords):
-            resume_set = set(resume_keywords)
-            job_set = set(job_keywords)
-            
-            # Calculate overlap
-            common_keywords = resume_set.intersection(job_set)
-            
-            if not resume_set or not job_set:
-                return 0.0
-                
-            # Calculate Jaccard similarity
-            similarity = len(common_keywords) / (len(resume_set) + len(job_set) - len(common_keywords))
-            
-            return similarity * 100  # Return as percentage
+        from resume_matcher.matcher import match_resume_to_job
         
         resume_file = request.files['file']
         print(f"Received file: {resume_file.filename}, size: {resume_file.content_length} bytes")
         
-        # Create a temporary directory to work in
-        temp_dir = tempfile.mkdtemp()
+        # Extract text from the file
+        resume_text = ""
+        if resume_file.filename.lower().endswith(('.html', '.htm')):
+            print(f"Processing HTML file: {resume_file.filename}")
+            html_content = resume_file.read().decode('utf-8', errors='ignore')
+            soup = BeautifulSoup(html_content, 'html.parser')
+            resume_text = soup.get_text(separator=' ', strip=True)
+            print(f"Extracted {len(resume_text)} characters from HTML")
+        else:
+            # For PDF files, use PyPDF2 directly
+            from PyPDF2 import PdfReader
+            pdf_reader = PdfReader(resume_file)
+            for page in pdf_reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    resume_text += page_text + "\n"
+            print(f"Extracted {len(resume_text)} characters from PDF")
         
-        try:
-            # Save the file to a temporary location
-            file_path = os.path.join(temp_dir, resume_file.filename)
-            resume_file.save(file_path)
-            
-            # Check file type
-            resume_text = ""
-            if resume_file.filename.lower().endswith(('.html', '.htm')):
-                print(f"Processing HTML file: {resume_file.filename}")
-                
-                # Read the HTML file
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    html_content = f.read()
-                
-                # Extract text from HTML
-                soup = BeautifulSoup(html_content, 'html.parser')
-                resume_text = soup.get_text(separator=' ', strip=True)
-                print(f"Extracted {len(resume_text)} characters from HTML")
-            else:
-                # For PDF files, use PyPDF2 directly
-                from PyPDF2 import PdfReader
-                
-                pdf_reader = PdfReader(file_path)
-                for page in pdf_reader.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        resume_text += page_text + "\n"
-                print(f"Extracted {len(resume_text)} characters from PDF")
-            
-            if not resume_text.strip():
-                return jsonify({'error': 'No text could be extracted from the file'}), 400
-            
-            # Extract keywords from text
-            resume_keywords = extract_keywords(resume_text)
-            job_keywords = extract_keywords(job_description)
-            
-            # Calculate score
-            score = score_match(resume_keywords, job_keywords)
-            
-            # Find matched and missing keywords
-            matched_keywords = list(set(resume_keywords).intersection(set(job_keywords)))
-            missing_keywords = list(set(job_keywords).difference(set(resume_keywords)))
-            
-            # Build result
-            result = {
-                "score": round(score, 2),
-                "resume_keywords": resume_keywords,
-                "job_keywords": job_keywords,
-                "matched_keywords": matched_keywords,
-                "missing_keywords": missing_keywords
-            }
-            
-            return jsonify({
-                'success': True,
-                'match_results': result
-            })
+        if not resume_text.strip():
+            return jsonify({'error': 'No text could be extracted from the file'}), 400
         
-        finally:
-            # Clean up temporary files
-            shutil.rmtree(temp_dir, ignore_errors=True)
+        # Use the new text-based matching function
+        match_results = match_resume_to_job(resume_text, job_description)
+        
+        return jsonify({
+            'match_results': match_results
+        })
         
     except Exception as e:
-        print(f"Resume matching error: {str(e)}")
-        return jsonify({
-            'error': 'Failed to process resume match',
-            'details': str(e)
-        }), 500
+        print(f"Error processing resume: {str(e)}")
+        return jsonify({'error': f'Failed to process resume: {str(e)}'}), 500
 
 if __name__ == '__main__':
     # Parse command line arguments to allow changing port
