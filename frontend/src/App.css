@@ -68,14 +68,29 @@ header button:disabled {
   background-color: #3e8e41 !important;
 }
 
-.render-button { background-color: #4CAF50 !important; }
-.render-button:hover { background-color: #3e8e41 !important; }
+.render-button {
+  background-color: #4CAF50 !important;
+}
 
-.export-button { background-color: #2196F3 !important; }
-.export-button:hover { background-color: #0b7dda !important; }
+.render-button:hover {
+  background-color: #3e8e41 !important;
+}
 
-.test-button { background-color: #9c27b0 !important; }
-.test-button:hover { background-color: #7b1fa2 !important; }
+.export-button {
+  background-color: #2196F3 !important;
+}
+
+.export-button:hover {
+  background-color: #0b7dda !important;
+}
+
+.test-button {
+  background-color: #9c27b0 !important;
+}
+
+.test-button:hover {
+  background-color: #7b1fa2 !important;
+}
 
 .match-resume-button {
   background-color: #ff9800 !important;
@@ -230,13 +245,14 @@ main {
   main {
     flex-direction: column;
   }
-  
-  .editor-pane, .preview-pane {
+
+  .editor-pane,
+  .preview-pane {
     flex: none;
     height: 50vh;
     width: 100%;
   }
-  
+
   .editor-pane {
     border-right: none;
     border-bottom: 1px solid #444;
@@ -266,7 +282,7 @@ main {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   font-size: 18px;
   text-align: center;
   line-height: 30px;
@@ -290,7 +306,7 @@ main {
   transition: opacity 0.3s;
   font-size: 14px;
   line-height: 1.4;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
 .ai-edit-tooltip-text::after {

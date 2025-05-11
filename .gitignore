@@ -5,7 +5,6 @@ lib64
 pyvenv.cfg
 __pycache__
 
-
 # Backend virtual environment
 /backend/venv/
 
