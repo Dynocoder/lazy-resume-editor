@@ -5,3 +5,8 @@ weasyprint==52.5
 pydyf==0.1.0
 werkzeug<2.1.0
 PyPDF2
+
+# Resume Matcher dependencies
+spacy==3.6.0
+textacy==0.13.0
+# Download: python -m spacy download en_core_web_sm
