@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 import os
 import json
+import io
+import traceback
 from PyPDF2 import PdfReader
 
 # TODO: update to /api/context
