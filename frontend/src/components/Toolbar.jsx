@@ -1,6 +1,6 @@
 import { exportPdf } from "../services/util";
 
-export default function Toolbar({ editorRef, showEditor, setShowEditor, files, isRendering, setIsRendering, setError, apiKey, renderHtml, BACKEND_URL }) {
+export default function Toolbar({ editorRef, showEditor, setShowEditor, setShowModal, setIsResumeUploaderOpen, files, isRendering, setIsRendering, setError, apiKey, renderHtml, BACKEND_URL }) {
 
   // Handle resume upload
   const handleResumeUpload = () => {

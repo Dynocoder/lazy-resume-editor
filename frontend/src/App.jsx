@@ -249,6 +249,8 @@ function App() {
           editorRef={editorRef}
           showEditor={showEditor}
           setShowEditor={setShowEditor}
+          setShowModal={setShowModal}
+          setIsResumeUploaderOpen={setIsResumeUploaderOpen}
           files={files}
           isRendering={isRendering}
           setIsRendering={setIsRendering}
