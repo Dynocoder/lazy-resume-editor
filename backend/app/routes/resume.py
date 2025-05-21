@@ -56,7 +56,6 @@ def export_pdf():
     """Export HTML to PDF using WeasyPrint"""
     if not request.json or 'files' not in request.json:
         return jsonify({'error': 'No files provided'}), 400
-
     files = request.json['files']
     main_file = request.json.get('mainFile', 'index.html')
 

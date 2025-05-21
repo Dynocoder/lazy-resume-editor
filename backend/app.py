@@ -11,12 +11,6 @@ from app import create_app
 
 app = create_app()
 
-
-
-# app = Flask(__name__)
-# CORS(app)  # Enable CORS for all routes
-
-
 @app.route('/upload-resume', methods=['POST'])
 def upload_resume():
     """Process uploaded resume and return customized content"""

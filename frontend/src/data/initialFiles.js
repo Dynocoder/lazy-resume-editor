@@ -273,3 +273,47 @@ h3 {
 }`,
   },
 ];
+
+
+export const initialJobDesc = `# Job Description
+
+Position Title: 
+Company: 
+Location: 
+
+## Job Summary
+[Enter job summary here]
+
+## Responsibilities
+- 
+- 
+- 
+
+## Requirements
+- 
+- 
+- 
+
+## Preferred Qualifications
+- 
+- 
+- 
+
+## Notes
+[Add any additional notes here]
+`;
+
+export const newCssContent = `/* Styles for the new file */
+body {
+    font-family: Arial, sans-serif;
+}`;
+
+export const newHtmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <title>New Page</title>
+</head>
+<body>
+    <h1>New Page</h1>
+</body>
+</html>`;

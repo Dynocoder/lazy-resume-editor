@@ -7,7 +7,8 @@ import './App.css';
 import APIKeyModal from './components/APIKeyModal';
 import ResumeUploader from './components/ResumeUploader';
 import { generateDirectEditScript, handleContentUpdate } from './components/DirectTextEditor';
-import { initialFiles } from './data/initialFiles';
+import { initialFiles, initialJobDesc, newCssContent, newHtmlContent } from './data/initialFiles';
+import Toolbar from './components/Toolbar';
 
 // Backend URL configuration
 const BACKEND_URL = 'http://localhost:5001';
@@ -48,50 +49,13 @@ function App() {
       newFileName = `untitled_${files.length}${extension}`;
 
       if (extension === '.html') {
-        newContent = `<!DOCTYPE html>
-<html>
-<head>
-    <title>New Page</title>
-</head>
-<body>
-    <h1>New Page</h1>
-</body>
-</html>`;
+        newContent = newHtmlContent;
       } else if (extension === '.css') {
-        newContent = `/* Styles for the new file */
-body {
-    font-family: Arial, sans-serif;
-}`;
+        newContent = newCssContent;
       }
     } else if (type === 'job-description') {
       newFileName = `job_description.txt`;
-      newContent = `# Job Description
-
-Position Title: 
-Company: 
-Location: 
-
-## Job Summary
-[Enter job summary here]
-
-## Responsibilities
-- 
-- 
-- 
-
-## Requirements
-- 
-- 
-- 
-
-## Preferred Qualifications
-- 
-- 
-- 
-
-## Notes
-[Add any additional notes here]
-`;
+      newContent = initialJobDesc;
     } else {
       newFileName = 'new_folder';
     }
@@ -192,94 +156,6 @@ Location:
     }
   };
 
-  const exportPdf = async () => {
-    try {
-      setIsRendering(true);
-      setError(null);
-
-      // Filter out job description files for PDF export
-      const renderableFiles = files.filter(f => f.fileType !== 'job-description');
-
-      // Generate PDF
-      const response = await axios.post(
-        `${BACKEND_URL}/export-pdf`,
-        { files: renderableFiles, mainFile: 'index.html' },
-        { responseType: 'blob', validateStatus: status => status < 600 }
-      );
-
-      // Handle non-PDF responses (errors)
-      if (response.headers['content-type'] === 'application/json') {
-        const text = await response.data.text();
-        const errorJson = JSON.parse(text);
-        setError(`PDF export failed: ${errorJson.error || 'Server error'}`);
-        return;
-      }
-
-      if (response.status !== 200) {
-        setError(`PDF export failed: Server returned status ${response.status}`);
-        return;
-      }
-
-      // Download the PDF
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'resume.pdf');
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(link);
-      }, 100);
-    } catch (err) {
-      console.error('PDF export error:', err);
-      setError(`PDF export failed: ${err.message || 'Unknown error'}`);
-    } finally {
-      setIsRendering(false);
-    }
-  };
-
-  const storeAPIKey = () => {
-    setShowModal(true);
-  };
-
-  const testWeasyPrint = async () => {
-    try {
-      setIsRendering(true);
-      setError(null);
-
-      const response = await axios.get(`${BACKEND_URL}/test-weasyprint`);
-
-      if (response.data.status === 'success') {
-        alert(`WeasyPrint is working correctly! PDF size: ${response.data.pdf_size} bytes`);
-      } else {
-        setError(`WeasyPrint test failed: ${response.data.error || 'Unknown error'}`);
-      }
-    } catch (err) {
-      if (err.response && err.response.data) {
-        setError(`WeasyPrint test failed: ${err.response.data.error || err.response.data.details || 'Server error'}`);
-      } else {
-        setError('WeasyPrint test failed. Check the console for details.');
-      }
-    } finally {
-      setIsRendering(false);
-    }
-  };
-
-  const handleUndo = () => {
-    if (editorRef.current) {
-      editorRef.current.trigger('keyboard', 'undo', null);
-    }
-  };
-
-  const handleRedo = () => {
-    if (editorRef.current) {
-      editorRef.current.trigger('keyboard', 'redo', null);
-    }
-  };
 
   // Render on first load and when files change
   useEffect(() => {
@@ -356,15 +232,6 @@ Location:
     return 'plaintext';
   };
 
-  // Handle resume upload
-  const handleResumeUpload = () => {
-    if (!apiKey) {
-      setShowModal(true);
-    } else {
-      setIsResumeUploaderOpen(true);
-    }
-  };
-
   // Warn user before leaving or refreshing
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -378,59 +245,19 @@ Location:
   return (
     <>
       <div className="app">
-        <header>
-          <h1>Lazy Resume Editor</h1>
-          <button
-            onClick={handleUndo}
-            className="toolbar-button"
-            title="Undo last edit"
-          >
-            Undo
-          </button>
-          <button
-            onClick={handleRedo}
-            className="toolbar-button"
-            title="Redo last edit"
-          >
-            Redo
-          </button>
-          <button
-            onClick={() => setShowEditor(prev => !prev)}
-            className="toolbar-button"
-            title="Toggle HTML Editor"
-          >
-            {showEditor ? 'Hide HTML' : 'Show HTML'}
-          </button>
-          <button
-            onClick={handleResumeUpload}
-            className="toolbar-button"
-            title="Upload Resume"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146-2-2a.5.5 0 0 0-.708 0l-2 2a.5.5 0 1 0 .708.708L7.5 6.707V10.5a.5.5 0 0 0 1 0V6.707l1.146 1.147a.5.5 0 0 0 .708-.708z" />
-            </svg>
-            Upload Resume
-          </button>
-          <button
-            onClick={storeAPIKey}
-            className={`toolbar-button api-key-button ${apiKey ? 'api-key-set' : ''}`}
-          >
-            {apiKey ? "✓ API Key Set" : "Add API Key"}
-          </button>
-          <button
-            onClick={renderHtml}
-            disabled={isRendering}
-            className="toolbar-button render-button"
-          >
-            {isRendering ? 'Rendering...' : 'Preview'}
-          </button>
-          <button
-            onClick={exportPdf}
-            className="toolbar-button export-button"
-          >
-            Export to PDF
-          </button>
-        </header>
+        <Toolbar
+          editorRef={editorRef}
+          showEditor={showEditor}
+          setShowEditor={setShowEditor}
+          files={files}
+          isRendering={isRendering}
+          setIsRendering={setIsRendering}
+          setError={setError}
+          apiKey={apiKey}
+          renderHtml={renderHtml}
+          BACKEND_URL={BACKEND_URL}
+        />
+
 
         <main>
           {showEditor && (
